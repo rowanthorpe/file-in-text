@@ -51,9 +51,9 @@ Any additional contributions are noted in the AUTHORS.md file.
 Rationale
 ---------
 
-I loved the idea & implementation of `snow`, but the embedded
+I loved the idea & implementation of [snow](http://www.darkside.com.au/snow), but the embedded
 encryption [ICE](http://www.darkside.com.au/ice/index.html) is a
-small library written by the SNOW author, which hasn't undergone any
+small library written by its author, which hasn't undergone any
 third-party cryptanalysis, and appears to have not seen an update
 since 1999(?). I was curious how feasible it would be to let gpg do
 the encrypting (which obviously comes with the cost of being less
