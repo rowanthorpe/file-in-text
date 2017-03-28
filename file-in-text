@@ -1,0 +1,132 @@
+#!/bin/sh
+
+# file-in-text (file-in-text version 0.1.0)
+
+#  file-in-text: A tool to encrypt & steg-hide a file in text whitespace
+#                using "gpg" and "snow".
+#  Copyright © 2017 Rowan Thorpe <rowan@rowanthorpe.com>
+#
+#  Any additional contributions are noted in the AUTHORS file.
+#
+#  This file is part of file-in-text.
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+recipient=''
+encrypt_flag='--symmetric'
+decrypt_flag='--decrypt'
+while test $# -ne 0; do
+    case "${1}" in
+        -h|--help|--usage)
+            cat <<EOF
+Usage: file-in-text [OPTIONS] [--] hide PAYLOAD_FILE|- CONTAINER_FILE
+                                   [COMBINED_FILE|-]
+  or:  file-in-text [OPTIONS] [--] unhide COMBINED_FILE|- [PAYLOAD_FILE|-]
+
+OPTIONS:
+ -h, --help, --usage : This help message
+ -k, --key XX        : Use specified gpg assymetric key rather than symmetric
+                       password for encryption/decryption
+
+When the first arg after the action arg is "-" stdin is used.
+When the last arg is "-" or missing stdout is used.
+When gpg-keys are used for "hide" they are used as hidden-recipient, so the
+key may have to be explicitly specified for "unhide" too, if that key is not
+the recipient's configured default key.
+EOF
+            exit 0
+            ;;
+        -k|--key)
+            recipient="${2}"
+            encrypt_flag="--hidden-recipient \"${recipient}\" --encrypt"
+            decrypt_flag="--try-secret-key \"${recipient}\" --decrypt"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            printf 'unrecognised option\n' >&2
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+action="${1}"
+shift
+case "${action}" in
+    hide)
+        payload_file="${1}"
+        container_file="${2}"
+        combined_file="${3:-/dev/stdout}"
+        shift 2
+        ! test "x${payload_file}" = 'x-' || payload_file='/dev/stdin'
+        ! test "x${combined_file}" = 'x-' || combined_file='/dev/stdout'
+        ;;
+    unhide)
+        combined_file="${1}"
+        payload_file="${2:-/dev/stdout}"
+        shift 1
+        ! test "x${combined_file}" = 'x-' || combined_file='/dev/stdin'
+        ! test "x${payload_file}" = 'x-' || payload_file='/dev/stdout'
+        ;;
+    *)
+        printf 'unrecognised action\n' >&2
+        exit 1
+        ;;
+esac
+
+tempfile="$(mktemp)" || { printf 'mktemp failed\n' >&2; exit 1; }
+trap 'rm -f "${tempfile}"' EXIT
+
+case "${action}" in
+    hide)
+        payload_file_real="$(readlink -e "${payload_file}" || :)"
+        if test -n "${payload_file_real}" && test 'regular file' = "$(stat -c '%F' -- "${payload_file_real}")"; then
+            payload_size=$(wc -c "${payload_file_real}" | cut -d' ' -f1)
+            if test ${payload_size} -lt 300; then
+                gpg_compress_opts='--compress-algo none'
+                if test ${payload_size} -lt 50; then
+                    snow_compress_opts=''
+                else
+                    snow_compress_opts='-C'
+                fi
+            else
+                gpg_compress_opts='--bzip2-compress-level 9 --compress-algo bzip2'
+                snow_compress_opts=''
+            fi
+        else
+            # probably not seekable, so for lack of info just presume a big file
+            gpg_compress_opts='--bzip2-compress-level 9 --compress-algo bzip2'
+            snow_compress_opts=''
+        fi
+        eval "
+            gpg -o - ${gpg_compress_opts} ${encrypt_flag} \"\${payload_file}\" 2>/dev/null | \
+                stegsnow ${snow_compress_opts} -Q -l 72 -f '/dev/stdin' \"\${container_file}\" \"\${combined_file}\"
+        "
+        ;;
+    unhide)
+        # use conditional output file here, otherwise gpg asks before "overwriting" /dev/stdout
+        eval "
+            stegsnow ${snow_compress_opts} -Q \"\${combined_file}\" | \
+                gpg $(test '/dev/stdout' = "${payload_file}" || printf '-o \"\${payload_file}\"') ${decrypt_flag} 2>/dev/null
+        "
+        ;;
+esac
