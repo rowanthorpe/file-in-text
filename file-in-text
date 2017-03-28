@@ -38,7 +38,7 @@ Usage: file-in-text [OPTIONS] [--] hide PAYLOAD_FILE|- CONTAINER_FILE
 
 OPTIONS:
  -h, --help, --usage : This help message
- -k, --key XX        : Use specified gpg assymetric key rather than symmetric
+ -k, --key XX        : Use specified gpg asymmetric key rather than symmetric
                        password for encryption/decryption
 
 When the first arg after the action arg is "-" stdin is used.
