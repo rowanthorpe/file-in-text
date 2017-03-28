@@ -23,7 +23,7 @@ as safe as any normally encrypted email. The main usefulness could be:
 * As a fun toy
 * To send a payload within a plain-text email to a public mailing-list which
   an intended recipient can extract but most casual viewers will never
-  realise was even there (similarly to how spies use [dead drops](https://en.wikipedia.org/wiki/Dead_drop).
+  realise was even there (similarly to how spies use [dead drops](https://en.wikipedia.org/wiki/Dead_drop)).
 
 It handles input/output-files, and/or stdin/stdout, uses a crude algorithm
 to disable compression if not useful (for small size), leverages gpg's
