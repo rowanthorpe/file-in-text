@@ -17,7 +17,7 @@ lines at the end, which is more obvious). Of course any serious cryptanalyst
 who knows to look for it will find and recognise the strange pattern of
 trailing spaces as a red-flag, and may even extract the still-encrypted file
 (so this should not be seen as a bulletproof technique for plausible
-deniability) but even then the encryption is provided by gpg, so is still
+deniability) but even then the encryption is provided by `gpg`, so is still
 as safe as any normally encrypted email. The main usefulness could be:
 
 * As a fun toy
@@ -26,7 +26,7 @@ as safe as any normally encrypted email. The main usefulness could be:
   realise was even there (similarly to how spies use [dead drops](https://en.wikipedia.org/wiki/Dead_drop)).
 
 It handles input/output-files, and/or stdin/stdout, uses a crude algorithm
-to disable compression if not useful (for small size), leverages gpg's
+to disable compression if not useful (for small size), leverages `gpg`'s
 options to accomodate both symmetric (password) and asymmetric (keypair)
 encryption, and uses "hidden recipient" for added paranoia-value with
 asymmetric encryption.
@@ -44,9 +44,9 @@ License
 
 Copyright © 2017 Rowan Thorpe <rowan@rowanthorpe.com>
 
-file-in-text uses the GPLv3 license, check the COPYING file.
+`file-in-text` uses the GPLv3 license, check the `COPYING` file.
 
-Any additional contributions are noted in the AUTHORS.md file.
+Any additional contributions are noted in the `AUTHORS.md` file.
 
 Rationale
 ---------
@@ -55,7 +55,7 @@ I loved the idea & implementation of [snow](http://www.darkside.com.au/snow), bu
 encryption [ICE](http://www.darkside.com.au/ice/index.html) is a
 small library written by its author, which hasn't undergone any
 third-party cryptanalysis, and appears to have not seen an update
-since 1999(?). I was curious how feasible it would be to let gpg do
+since 1999(?). I was curious how feasible it would be to let `gpg` do
 the encrypting (which obviously comes with the cost of being less
 efficient for encrypting tiny text messages though), so for fun I
 wrote this as a tool for doing that in both directions. It was more
